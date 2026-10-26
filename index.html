@@ -1,0 +1,581 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOKLOK - Nonton Film</title>
+
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #101014;
+      --panel: #1b1b23;
+      --accent: #e50945;
+      --text: #ffffff;
+      --muted: #aaaab5;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 6%;
+      background: #17171d;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      gap: 20px;
+    }
+
+    .logo {
+      font-size: 27px;
+      font-weight: bold;
+      color: var(--accent);
+      letter-spacing: 2px;
+    }
+
+    .search {
+      display: flex;
+      gap: 8px;
+      width: min(400px, 60%);
+    }
+
+    input {
+      min-width: 0;
+      flex: 1;
+      padding: 12px 15px;
+      border: 1px solid #383842;
+      border-radius: 25px;
+      outline: none;
+      background: #25252e;
+      color: white;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      color: white;
+      background: var(--accent);
+      padding: 11px 17px;
+      border-radius: 20px;
+      font-weight: bold;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .hero {
+      min-height: 340px;
+      padding: 70px 7%;
+      display: flex;
+      align-items: center;
+      background:
+        linear-gradient(90deg, #101014 5%, #101014dd 45%, #10101455),
+        linear-gradient(0deg, #101014, transparent),
+        url("https://image.tmdb.org/t/p/w1280/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg")
+        center/cover;
+    }
+
+    .hero-content {
+      max-width: 540px;
+    }
+
+    .hero small {
+      color: #ff456f;
+      font-weight: bold;
+      letter-spacing: 3px;
+    }
+
+    .hero h1 {
+      font-size: clamp(35px, 6vw, 58px);
+      margin: 15px 0;
+    }
+
+    .hero p {
+      line-height: 1.7;
+      color: #d0d0d6;
+      margin-bottom: 22px;
+    }
+
+    main {
+      padding: 35px 6%;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 25px;
+    }
+
+    h2 {
+      font-size: 24px;
+    }
+
+    .categories {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-bottom: 28px;
+    }
+
+    .categories button {
+      background: var(--panel);
+      border: 1px solid #353540;
+    }
+
+    .categories button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 22px 15px;
+    }
+
+    .movie {
+      min-width: 0;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .movie:hover {
+      transform: translateY(-5px);
+    }
+
+    .poster {
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      object-fit: cover;
+      border-radius: 10px;
+      background: var(--panel);
+    }
+
+    .movie h3 {
+      font-size: 15px;
+      margin: 10px 0 7px;
+      line-height: 1.4;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .rating {
+      color: #ffd166;
+    }
+
+    .message {
+      text-align: center;
+      padding: 45px 10px;
+      color: var(--muted);
+      grid-column: 1 / -1;
+    }
+
+    .loading {
+      text-align: center;
+      color: var(--muted);
+      padding: 35px;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      background: #000d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .modal-box {
+      position: relative;
+      width: min(750px, 100%);
+      background: #202029;
+      border-radius: 16px;
+      padding: 25px;
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 25px;
+      margin: auto;
+    }
+
+    .modal-box img {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    .modal-box h2 {
+      margin: 15px 0;
+    }
+
+    .modal-box p {
+      color: #ccc;
+      line-height: 1.7;
+      margin-bottom: 15px;
+    }
+
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      border-radius: 50%;
+      padding: 8px 12px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 28px 15px;
+      background: #17171d;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    [x-cloak] {
+      display: none !important;
+    }
+
+    @media (max-width: 900px) {
+      .movie-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 15px 4%;
+        flex-wrap: wrap;
+      }
+
+      .logo {
+        font-size: 23px;
+      }
+
+      .search {
+        width: 100%;
+      }
+
+      .hero {
+        min-height: 300px;
+        padding: 45px 5%;
+      }
+
+      main {
+        padding: 28px 4%;
+      }
+
+      .movie-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px 12px;
+      }
+
+      .modal-box {
+        grid-template-columns: 110px 1fr;
+        gap: 15px;
+        padding: 18px;
+      }
+
+      .modal-box h2 {
+        font-size: 19px;
+      }
+
+      .modal-box p {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+
+<body x-data="loklokApp()" x-init="init()">
+
+  <header>
+    <div class="logo">LOKLOK<span style="color:white">.</span></div>
+
+    <form class="search" @submit.prevent="searchMovies()">
+      <input
+        type="search"
+        x-model="keyword"
+        placeholder="Cari judul film..."
+        aria-label="Cari film"
+      >
+      <button type="submit">Cari</button>
+    </form>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <small>WELCOME TO LOKLOK</small>
+      <h1>Temukan Film Favoritmu</h1>
+      <p>
+        Jelajahi film populer, film terbaru, dan berbagai genre
+        favoritmu dalam satu tempat.
+      </p>
+      <button @click="loadPopular()">Jelajahi Film →</button>
+    </div>
+  </section>
+
+  <main>
+    <div class="toolbar">
+      <h2 x-text="sectionTitle"></h2>
+      <span style="color:var(--muted);font-size:13px"
+            x-text="movies.length + ' film'"></span>
+    </div>
+
+    <div class="categories">
+      <button
+        :class="{active: category === 'popular'}"
+        @click="loadPopular()">Populer</button>
+
+      <button
+        :class="{active: category === 'now_playing'}"
+        @click="loadCategory('now_playing', 'Sedang Tayang')">
+        Sedang Tayang
+      </button>
+
+      <button
+        :class="{active: category === 'top_rated'}"
+        @click="loadCategory('top_rated', 'Rating Tertinggi')">
+        Rating Tertinggi
+      </button>
+
+      <button
+        :class="{active: category === 'upcoming'}"
+        @click="loadCategory('upcoming', 'Film Mendatang')">
+        Film Mendatang
+      </button>
+    </div>
+
+    <div class="loading" x-show="loading">
+      Memuat daftar film...
+    </div>
+
+    <div class="movie-grid">
+      <template x-for="movie in movies" :key="movie.id">
+        <article class="movie" @click="showDetails(movie)">
+          <img
+            class="poster"
+            :src="movie.poster_path
+              ? imageBase + movie.poster_path
+              : placeholder"
+            :alt="movie.title"
+            loading="lazy"
+          >
+
+          <h3 x-text="movie.title"></h3>
+
+          <div class="meta">
+            <span x-text="(movie.release_date || '').slice(0,4) || 'TBA'"></span>
+            <span class="rating">
+              ★ <span x-text="Number(movie.vote_average || 0).toFixed(1)"></span>
+            </span>
+          </div>
+        </article>
+      </template>
+
+      <div class="message" x-show="!loading && movies.length === 0">
+        Film tidak ditemukan. Coba kata kunci lain.
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:35px"
+         x-show="movies.length > 0 && !loading">
+      <button @click="nextPage()">Muat Film Lainnya →</button>
+    </div>
+  </main>
+
+  <!-- Detail film -->
+  <div class="modal" x-show="selectedMovie" x-cloak
+       @click.self="selectedMovie = null"
+       @keydown.escape.window="selectedMovie = null">
+
+    <div class="modal-box" x-show="selectedMovie">
+      <button class="close" @click="selectedMovie = null">✕</button>
+
+      <img
+        :src="selectedMovie && selectedMovie.poster_path
+          ? imageBase + selectedMovie.poster_path
+          : placeholder"
+        alt="Poster film"
+      >
+
+      <div>
+        <h2 x-text="selectedMovie?.title"></h2>
+
+        <div class="meta" style="margin-bottom:15px">
+          <span x-text="selectedMovie?.release_date || 'Tanggal belum tersedia'"></span>
+          <span class="rating">
+            ★ <span x-text="Number(selectedMovie?.vote_average || 0).toFixed(1)"></span>
+          </span>
+        </div>
+
+        <p x-text="selectedMovie?.overview || 'Sinopsis belum tersedia.'"></p>
+
+        <button @click="selectedMovie = null">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <strong style="color:var(--accent)">LOKLOK</strong><br>
+    Temukan hiburan favoritmu di sini.<br>
+    Informasi film disediakan melalui TMDB.
+    <br>LOKLOK bukan layanan streaming film.
+  </footer>
+
+  <script>
+    function loklokApp() {
+      return {
+        // API key yang kamu berikan
+        apiKey: 'd33bc961e90537404105794e891aca7d',
+
+        apiBase: 'https://api.themoviedb.org/3',
+        imageBase: 'https://image.tmdb.org/t/p/w500',
+        placeholder:
+          'https://placehold.co/500x750/202029/ffffff?text=No+Poster',
+
+        movies: [],
+        keyword: '',
+        category: 'popular',
+        sectionTitle: 'Film Populer',
+        loading: false,
+        page: 1,
+        selectedMovie: null,
+        requestId: 0,
+
+        async init() {
+          await this.loadPopular();
+        },
+
+        async fetchMovies(endpoint, params = {}) {
+          const currentRequest = ++this.requestId;
+          this.loading = true;
+
+          try {
+            const query = new URLSearchParams({
+              api_key: this.apiKey,
+              language: 'id-ID',
+              page: String(params.page || 1),
+              ...params
+            });
+
+            const response = await fetch(
+              `${this.apiBase}${endpoint}?${query}`
+            );
+
+            if (!response.ok) {
+              throw new Error(
+                `API error ${response.status}: ${response.statusText}`
+              );
+            }
+
+            const data = await response.json();
+
+            if (currentRequest !== this.requestId) return;
+
+            if (params.append) {
+              this.movies = [...this.movies, ...(data.results || [])];
+            } else {
+              this.movies = data.results || [];
+            }
+
+            this.page = Number(params.page || 1);
+          } catch (error) {
+            if (currentRequest === this.requestId) {
+              console.error('Gagal mengambil film:', error);
+              this.movies = [];
+              this.sectionTitle = 'Gagal Memuat Film';
+              alert(
+                'Film gagal dimuat. Periksa koneksi internet dan API key TMDB.'
+              );
+            }
+          } finally {
+            if (currentRequest === this.requestId) {
+              this.loading = false;
+            }
+          }
+        },
+
+        async loadPopular() {
+          this.category = 'popular';
+          this.sectionTitle = 'Film Populer';
+          this.keyword = '';
+          await this.fetchMovies('/movie/popular');
+        },
+
+        async loadCategory(type, title) {
+          this.category = type;
+          this.sectionTitle = title;
+          this.keyword = '';
+          await this.fetchMovies(`/movie/${type}`);
+        },
+
+        async searchMovies() {
+          if (!this.keyword.trim()) {
+            return this.loadPopular();
+          }
+
+          this.category = 'search';
+          this.sectionTitle = 'Hasil Pencarian';
+          await this.fetchMovies('/search/movie', {
+            query: this.keyword.trim(),
+            include_adult: 'false'
+          });
+        },
+
+        async nextPage() {
+          if (this.loading) return;
+
+          const next = this.page + 1;
+
+          if (this.category === 'search') {
+            await this.fetchMovies('/search/movie', {
+              query: this.keyword.trim(),
+              include_adult: 'false',
+              page: next,
+              append: true
+            });
+          } else {
+            await this.fetchMovies(
+              `/movie/${this.category === 'popular'
+                ? 'popular'
+                : this.category}`,
+              { page: next, append: true }
+            );
+          }
+        },
+
+        showDetails(movie) {
+          this.selectedMovie = movie;
+        }
+      };
+    }
+  </script>
+</body>
+</html>
